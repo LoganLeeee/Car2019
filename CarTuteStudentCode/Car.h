@@ -32,7 +32,7 @@ public:
 	void drawbackAxel();
 	void drawWheel();
 	void drawTransmission();
-
+	void  drawSteering();
 	void  DrawAxle();
 	Car();
 	~Car();

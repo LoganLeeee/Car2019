@@ -28,10 +28,12 @@ bool timeForNextFrame = false;
 #define cmdRed		 1
 #define cmdGreen	 2
 #define cmdExit		99
+#define  GLUT_WHEEL_UP 3           //定义滚轮操作
+#define  GLUT_WHEEL_DOWN 4
 
 #include <math.h>
 static float c = M_PI / 180.0f; //弧度和角度转换参数
-static int du = 45, oldmy = -1, oldmx = -1; //du是视点绕y轴的角度,opengl里默认y轴是上方向
+static int du = -33, oldmy = 1, oldmx = 1; //du是视点绕y轴的角度,opengl里默认y轴是上方向
 static float r = 5.5f, h = 5.0f; //r是视点绕y轴的半径,h是视点高度即在y轴上的坐标
 
 static int   fb = -1, turn = 1; // Car movment:  fb:forward or backward  ; turn: left/right turn
@@ -100,36 +102,36 @@ static void drawWorld()
 	//axes->drawAxesP(1);
 	//glColor3fv(color3);
 	//car->DrawAxle();
+	glColor3f(0, 0, 0);
 	car->render();
 
 	glPopMatrix();
 
+	// draw Front parts
 	glPushMatrix();
-
-	glRotatef(turn, 0.0, 1.0, 0.0);
-	glColor3f(0.09*abs(turn), 0.08*abs(turn), 0);
-	car->drawTransmission();
-
-	glRotatef(fb*SpinAngle, 1.0, 0.0, 0.0);
-
+	glRotatef(turn, 0.0, 1.0, 0.0);					//Orientation of wheels and Transmission depends on key pressed.
+	glColor3f(0.09*abs(turn), 0.08*abs(turn), 0);	// Transmission's color depends on orientation.
+	car->drawTransmission();						// drawing Front Transmission.
+	glRotatef(fb*SpinAngle, 1.0, 0.0, 0.0);			// Spining speed same as back wheels.
 	glColor3f(0, 0, 0.8);
-	car->drawWheel();
+	car->drawWheel();								// drawing Front Wheels
 	glPopMatrix();
 
-	// draw Back part
+	// draw Steering parts
 	glPushMatrix();
+	glRotatef(turn * 4, 0.0, 1.0, 1.0);				//Orientation of Steering depends on key pressed.
+	glColor3f(0.09*abs(turn) + 0.2, 0.08*abs(turn) + 0.2, 0);	// Steering's color depends on orientation.
+	car->drawSteering();
+	glPopMatrix();
 
+	// draw Back parts
+	glPushMatrix();
 	car->drawbackAxel();
-
-	glRotatef(fb*SpinAngle, 1.0, 0.0, 0.0);
-
-	glColor3f(-0.3*fb, 0.3*fb, 0);
-
-	car->drawTransmission();  // draw Back Transmission
-
+	glRotatef(fb*SpinAngle, 1.0, 0.0, 0.0);	// Spining speed depends on key pressed.
+	glColor3f(-0.3*fb, 0.3*fb, 0);			// Transmission's color depends on speed.
+	car->drawTransmission();				// drawing Back Transmission
 	glColor3f(0, 0, 0.8);
-	car->drawWheel();	// drawBackWheel
-
+	car->drawWheel();						// drawing Back Wheels
 	glPopMatrix();
 }
 
@@ -153,7 +155,7 @@ static void display()
 	  //printf("At:%.2f %.2f %.2f\n",r*cos(c*du),h,r*sin(c*du)); //这就是视点的坐标
 
 	glLoadIdentity();
-	gluLookAt(r*cos(c*du), h, r*sin(c*du), 0, 0, 0, 0, 1, 0); //从视点看远点,y轴方向(0,1,0)是上方向
+	gluLookAt(r*cos(c*du), h, r*sin(c*du), 0, 0, 0, 0, 1, 0);	//从视点看远点,y轴方向(0,1,0)是上方向
 	///
 	SetUp3D();
 	drawWorld();
@@ -172,17 +174,29 @@ static void display()
 
 void Mouse(int button, int state, int x, int y) //处理鼠标点击
 {
-	if (state == GLUT_DOWN) //第一次鼠标按下时,记录鼠标在窗口中的初始坐标
+	if (state == GLUT_DOWN)						//第一次鼠标按下时,记录鼠标在窗口中的初始坐标
+	{
 		oldmx = x, oldmy = y;
+	}
+	if (state == GLUT_UP && button == GLUT_WHEEL_UP)
+	{
+		fov += 10;
+		printf("滚轮向上");
+	}
+	if (state == GLUT_UP && button == GLUT_WHEEL_DOWN)
+	{
+		fov -= 10;
+		printf("滚轮向上");
+	}
 }
-void onMouseMove(int x, int y) //处理鼠标拖动
+void onMouseMove(int x, int y)					//处理鼠标拖动
 {
-	//printf("%d\n",du);
-	du += x - oldmx; //鼠标在窗口x轴方向上的增量加到视点绕y轴的角度上，这样就左右转了
-	h += 0.03f*(y - oldmy); //鼠标在窗口y轴方向上的改变加到视点的y坐标上，就上下转了
-	if (h > 8.0f) h = 8.0f; //视点y坐标作一些限制，不会使视点太奇怪
+	printf("%d\n",du);
+	du += x - oldmx;							//鼠标在窗口x轴方向上的增量加到视点绕y轴的角度上，这样就左右转了
+	h += 0.03f*(y - oldmy);						//鼠标在窗口y轴方向上的改变加到视点的y坐标上，就上下转了
+	if (h > 8.0f) h = 8.0f;						//视点y坐标作一些限制，不会使视点太奇怪
 	else if (h < -8.0f) h = -8.0f;
-	oldmx = x, oldmy = y; //把此时的鼠标坐标作为旧值，为下一次计算增量做准备
+	oldmx = x, oldmy = y;						//把此时的鼠标坐标作为旧值，为下一次计算增量做准备
 }
 //void init()
 //{
@@ -265,9 +279,18 @@ static void specialKey(int key, int x, int y)
 		upVec[1] = 1;
 		upVec[2] = 0;
 
-		fov = 60; // field of view
+		fov = 120; // field of view
 		near = 0.5;
 		far = 20;
+	}
+
+	if (key == GLUT_KEY_PAGE_UP)
+	{
+		fov -= 10;
+	}
+	if (key == GLUT_KEY_PAGE_DOWN)
+	{
+		fov += 10;
 	}
 	// Use up/down key control speed and orientation.
 	if (key == GLUT_KEY_UP)
@@ -321,17 +344,17 @@ static void initGraphics(void)
 	/* Start values */
 	SpinAngle = 0.0;
 
-	eyePoint[0] = 5.0;
-	eyePoint[1] = 5.0;
-	eyePoint[2] = 5.0;
+	//eyePoint[0] = 5.0;
+	//eyePoint[1] = 5.0;
+	//eyePoint[2] = 5.0;
 
-	lookAtPoint[0] = 0;
-	lookAtPoint[1] = 0;
-	lookAtPoint[2] = 0;
+	//lookAtPoint[0] = 0;
+	//lookAtPoint[1] = 0;
+	//lookAtPoint[2] = 0;
 
-	upVec[0] = 0;
-	upVec[1] = 1;
-	upVec[2] = 0;
+	//upVec[0] = 0;
+	//upVec[1] = 1;
+	//upVec[2] = 0;
 
 	fov = 60; // field of view  /视野距离
 	near = 0;

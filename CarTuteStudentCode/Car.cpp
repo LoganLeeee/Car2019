@@ -1,10 +1,10 @@
 // sphere.cpp
 
 #include "car.h"
-double l = 2;//longth of the car 车长
-double w = 0.8;//half width of the 车宽一半
-double wheelW = 0.2*w;
-double wheelH = 0.15*l;
+double l = 2;			//longth of the car 车长
+double w = 0.8;			//half width of the 车宽一半
+double wheelW = 0.2*w;	//wheel width
+double wheelH = 0.15*l;	//wheel hight
 
 Car::Car()
 {
@@ -22,7 +22,7 @@ Car::~Car()
 
 void Car::drawCylinder(int slices, int stacks, int l)
 {
-	glColor3f(0, 0, 0);
+	//glColor3f(0.3, 0.3, 0.3);
 	gluCylinder(quadric1, 0.05*l, 0.05*l, l, slices, stacks);
 }
 
@@ -44,11 +44,11 @@ void Car::drawCar()
 void Car::drawBaseWheel()
 {
 	glPushMatrix();
-	glLineWidth(3);//线宽加粗
+	glLineWidth(3);						//线宽加粗
 	glRectf(0, -wheelH, wheelW, wheelH);//drawing wheel support spoke 画辐条
 	glRotatef(90, 0, 1, 0);
 	//glutWireTorus(.1, 0.5, 20, 50);
-	glLineWidth(1);//线宽恢复
+	glLineWidth(1);						//线宽恢复
 	gluCylinder(quadric2, wheelH, wheelH, wheelW, 20, 5);
 	glRotatef(90, 1, 0, 0);
 	glLineWidth(3);
@@ -102,6 +102,22 @@ void Car::drawbackAxel()
 	glTranslatef(0, 0, l);
 	glScalef(1.1, 1.3, 1.3);
 }
+
+void Car::drawSteering()
+{
+	glPushMatrix();
+	glLineWidth(1);
+
+	glRotatef(-50, 1, 0, 0);
+	drawCylinder(10, 4, 0.5*l);
+
+	glTranslatef(0, 0, 0.5*(l - wheelW));
+	glRotatef(-90, 0, 1, 0);
+	glScalef(.5, 1, 1);
+	drawBaseWheel();
+	glPopMatrix();
+}
+
 void Car::DrawAxle()
 {
 	glTranslatef(0, 0, -l * 0.5);
